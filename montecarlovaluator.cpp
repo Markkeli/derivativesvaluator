@@ -1,7 +1,6 @@
 
 #include <cmath>
-#include <QDebug>
-#include <thread>
+
 
 #include <ndcalculator.h>
 #include <montecarlovaluator.h>

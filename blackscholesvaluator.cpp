@@ -1,7 +1,6 @@
 #include "blackscholesvaluator.h"
 
 #include <cmath>
-#include <QDebug>
 
 blackscholesvaluator::blackscholesvaluator():
 strikePriceAtTheBeginning_(0),
@@ -49,15 +48,13 @@ void blackscholesvaluator::calculatePrices()
           (riskFreeRate_ - 0.5*std::pow(volatility_, 2))*maturityTime_)
             /
          (volatility_*std::sqrt(maturityTime_));
-    qDebug() << d1 << "\n" << d2 << "\n";
 
     // N(d1) etc...
     Nd1 = normsdist(d1);
     Nd2 = normsdist(d2);
     Nnd1 = normsdist(-d1);
     Nnd2 = normsdist(-d2);
-    qDebug() << Nd1 << "\n" << Nd2 << "\n";
-    qDebug() << Nnd1 << "\n" << Nnd2 << "\n";
+
     putPrice_ = exercisePrice_*Nnd2*std::exp(-riskFreeRate_*maturityTime_) - strikePriceAtTheBeginning_*Nnd1;
     callPrice_ = strikePriceAtTheBeginning_*Nd1 - exercisePrice_*Nd2*std::exp(-riskFreeRate_*maturityTime_);
     binPutPrice_ = std::exp(-riskFreeRate_*maturityTime_)*(-Nnd2);
