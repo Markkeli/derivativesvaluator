@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 
+#include "montecarlovaluator.h"
+#include "blackscholesvaluator.h"
+
 namespace Ui {
 class UserInterface;
 }
@@ -15,8 +18,15 @@ public:
     explicit UserInterface(QWidget *parent = nullptr);
     ~UserInterface();
 
+private slots:
+    void on_pushButton_clicked();
+
+    void on_pushButton_2_clicked();
+
 private:
     Ui::UserInterface *ui;
+    montecarlovaluator *eval;
+    blackscholesvaluator *evalbs;
 };
 
 #endif // USERINTERFACE_H

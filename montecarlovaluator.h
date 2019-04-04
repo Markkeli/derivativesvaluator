@@ -4,25 +4,25 @@
 #include <deque>
 #include <stdlib.h>
 
+// Pure c++ class for usability elsewhere
 
 class montecarlovaluator
 {
 public:
-    // Constructor class
+    // Constructor
     montecarlovaluator();
 
-    // Destructor class
+    // Destructor
     ~montecarlovaluator();
 
     void setParameters(double st0, double exprice, double mu,
                        double sigma, double dt, double maturity,
-                       double r, unsigned runs);
+                       double r);
 
-    // Calculates one singular trajectory for the strike price
-    std::deque<double> calculateSingleTrajectory() const;
+    void reset();
 
-    // Calculates the
-    void calculatePrices();
+    // Calculates the option prices
+    std::deque<double> calculatePrices(const unsigned & runningNumber);
 
     double europeanPutPrice() const;
     double europeanCallPrice() const;
@@ -33,6 +33,9 @@ public:
 private:
     // helper function
     double randomZeroToOne() const;
+
+    // Calculates one singular trajectory for the strike price
+    std::deque<double> calculateSingleTrajectory() const;
 
     // input parameters
     double strikePriceAtTheBeginning_; // strike price of the underlying financial instrument S(0)
@@ -45,7 +48,7 @@ private:
     unsigned numberOfRuns_;
 
     // internal variables
-    std::deque<std::deque<double>> strikePricesTrajectories_; // Storage for the current strike prices S(t) of the underlying financial instrument
+    //std::deque<std::deque<double>> strikePricesTrajectories_; // Storage for the current strike prices S(t) of the underlying financial instrument
 
     // output values
     double callPrice_;
@@ -53,6 +56,13 @@ private:
     double binCallPrice_;
     double binPutPrice_;
     double avgStrikePrice_;
+
+    // sums
+    double putPriceCompound_;
+    double callPriceCompound_;
+    double binCallPriceCompound_;
+    double binPutPriceCompound_;
+    double avgStrikePriceCompound_;
 
 };
 

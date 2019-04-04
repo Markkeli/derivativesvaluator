@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = derivativesvaluation
 TEMPLATE = app
@@ -28,12 +28,16 @@ SOURCES += \
         main.cpp \
         userinterface.cpp \
     montecarlovaluator.cpp \
-    ndcalculator.cpp
+    ndcalculator.cpp \
+    qcustomplot.cpp \
+    blackscholesvaluator.cpp
 
 HEADERS += \
         userinterface.h \
     montecarlovaluator.h \
-    ndcalculator.h
+    ndcalculator.h \
+    qcustomplot.h \
+    blackscholesvaluator.h
 
 FORMS += \
         userinterface.ui

@@ -1,8 +1,11 @@
-#include "montecarlovaluator.h"
 
-#include <ndcalculator.h>
 #include <cmath>
 #include <QDebug>
+#include <thread>
+
+#include <ndcalculator.h>
+#include <montecarlovaluator.h>
+
 
 montecarlovaluator::montecarlovaluator():
 strikePriceAtTheBeginning_(0),
@@ -17,9 +20,13 @@ callPrice_(0),
 putPrice_(0),
 binCallPrice_(0),
 binPutPrice_(0),
-avgStrikePrice_(0)
+avgStrikePrice_(0),
+putPriceCompound_(0),
+callPriceCompound_(0),
+binCallPriceCompound_(0),
+binPutPriceCompound_(0),
+avgStrikePriceCompound_(0)
 {
-    strikePricesTrajectories_.clear();
 }
 
 montecarlovaluator::~montecarlovaluator()
@@ -27,7 +34,7 @@ montecarlovaluator::~montecarlovaluator()
 
 }
 
-void montecarlovaluator::setParameters(double st0, double exprice, double mu, double sigma, double dt, double maturity, double r, unsigned runs)
+void montecarlovaluator::setParameters(double st0, double exprice, double mu, double sigma, double dt, double maturity, double r)
 {
     strikePriceAtTheBeginning_ = st0; // strike price of the underlying financial instrument S(0)
     exercisePrice_ = exprice; // derivative strike / exercise price - K
@@ -36,7 +43,15 @@ void montecarlovaluator::setParameters(double st0, double exprice, double mu, do
     dt_ = dt; // time step
     maturityTime_ = maturity; // expiration time in years
     riskFreeRate_ = r;
-    numberOfRuns_ = runs;
+}
+
+void montecarlovaluator::reset()
+{
+    putPriceCompound_ = 0;
+    callPriceCompound_ = 0;
+    binCallPriceCompound_ = 0;
+    binPutPriceCompound_ = 0;
+    avgStrikePriceCompound_ = 0;
 }
 
 std::deque<double> montecarlovaluator::calculateSingleTrajectory() const
@@ -59,43 +74,40 @@ std::deque<double> montecarlovaluator::calculateSingleTrajectory() const
     return trajectory;
 }
 
-void montecarlovaluator::calculatePrices()
+// Calculates one singular trajectory for the strike price
+std::deque<double> montecarlovaluator::calculatePrices(const unsigned & runningNumber)
 {
     unsigned numberOfTimeSteps = unsigned(maturityTime_ / dt_); // n
     double derivativeValue = exercisePrice_ * std::exp(-riskFreeRate_ * numberOfTimeSteps * dt_); // Kc
 
+    std::deque<double> strikePriceTrajectory;
+    strikePriceTrajectory.clear();
     double strikePrice = 0;
-    double putPriceCompound = 0;
-    double callPriceCompound = 0;
-    double binCallPriceCompound = 0;
-    double binPutPriceCompound = 0;
-    double avgStrikePriceCompound = 0;
 
-    strikePricesTrajectories_.clear();
+    strikePriceTrajectory = calculateSingleTrajectory();
+    strikePrice = strikePriceTrajectory.back();
 
-    for (unsigned i_run = 0; i_run < numberOfRuns_; ++i_run) {
-        strikePricesTrajectories_.push_back(calculateSingleTrajectory());
-        strikePrice = strikePricesTrajectories_.at(i_run).back();
+    // Exercise price compounding
+    avgStrikePriceCompound_ += strikePrice;
 
-        // Exercise price compounding
-        avgStrikePriceCompound += strikePrice;
+    // Put and call price compounding
+    putPriceCompound_ += std::max( (derivativeValue - strikePrice), 0.0 );
+    callPriceCompound_ += std::max( (strikePrice - derivativeValue), 0.0 );
 
-        // Put and call price compounding
-        putPriceCompound += std::max( (strikePrice - derivativeValue), 0.0 );
-        callPriceCompound += std::max( (derivativeValue - strikePrice), 0.0 );
+    // Binary put and call price compounding;
+    if ( strikePrice < derivativeValue ) binPutPriceCompound_ += 1.0 * std::exp(-riskFreeRate_ * numberOfTimeSteps * dt_);
+    if ( strikePrice >= derivativeValue ) binCallPriceCompound_ += 1.0 * std::exp(-riskFreeRate_ * numberOfTimeSteps * dt_);
 
-        // Binary put and call price compounding;
-        if ( strikePrice < derivativeValue ) binPutPriceCompound += 1.0 * std::exp(-riskFreeRate_ * numberOfTimeSteps * dt_);
-        if ( strikePrice >= derivativeValue ) binCallPriceCompound += 1.0 * std::exp(-riskFreeRate_ * numberOfTimeSteps * dt_);
-    }
 
     // Averaging after the runs
 
-    avgStrikePrice_ = avgStrikePriceCompound / double(numberOfRuns_);
-    putPrice_ = putPriceCompound / double(numberOfRuns_);
-    callPrice_ = callPriceCompound / double(numberOfRuns_);
-    binPutPrice_ = binPutPriceCompound / double(numberOfRuns_);
+    avgStrikePrice_ = avgStrikePriceCompound_ / double(runningNumber+1);
+    putPrice_ = putPriceCompound_ / double(runningNumber+1);
+    callPrice_ = callPriceCompound_ / double(runningNumber+1);
+    binPutPrice_ = binPutPriceCompound_ / double(runningNumber+1);
+    binCallPrice_ = binCallPriceCompound_ / double(runningNumber+1);
 
+    return strikePriceTrajectory;
 }
 
 double montecarlovaluator::europeanPutPrice() const

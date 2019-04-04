@@ -1,7 +1,8 @@
 #ifndef NORMALDISTRIBUTIONCONFIDENCECALCULATOR_H
 #define NORMALDISTRIBUTIONCONFIDENCECALCULATOR_H
 
-
+// This class is used to calculate the inverse normal distribution
+//
 class NDCalculator
 {
 public:
